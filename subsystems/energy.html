@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能源管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+
+        .system-header {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .system-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .energy-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .summary-change {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .change-positive {
+            color: #dc3545;
+        }
+
+        .change-negative {
+            color: #28a745;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+        }
+
+        .meter-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .meter {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .meter-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+
+        .meter-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .chart-bar {
+            position: absolute;
+            bottom: 20px;
+            background: #007bff;
+            width: 20px;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-normal {
+            color: #28a745;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            margin-right: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .alert {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="system-header">
+        <h1>能源管理系统</h1>
+        <p>Energy Management System - 智能能耗监控与优化</p>
+    </div>
+
+    <div class="alert">
+        <strong>节能提醒：</strong> 当前用电高峰期，建议调整非必要设备运行时间 | 最后更新：<span id="lastUpdate"></span>
+    </div>
+
+    <div class="energy-summary">
+        <div class="summary-card">
+            <div class="summary-value" id="totalPower">125.6</div>
+            <div class="summary-label">总功率 (kW)</div>
+            <div class="summary-change change-positive" id="powerChange">↑ 5.2% 较昨日</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="dailyConsumption">2,847</div>
+            <div class="summary-label">今日用电 (kWh)</div>
+            <div class="summary-change change-negative" id="consumptionChange">↓ 2.1% 较昨日</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="monthlyCost">¥18,456</div>
+            <div class="summary-label">本月电费</div>
+            <div class="summary-change change-positive" id="costChange">↑ 8.3% 较上月</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="efficiency">87.2%</div>
+            <div class="summary-label">能效比</div>
+            <div class="summary-change change-positive" id="efficiencyChange">↑ 1.5% 较昨日</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>实时功率监测</h3>
+            <div class="meter-container">
+                <div class="meter">
+                    <div class="meter-value" id="hvacPower">45.2</div>
+                    <div class="meter-label">空调系统 (kW)</div>
+                </div>
+                <div class="meter">
+                    <div class="meter-value" id="lightPower">18.7</div>
+                    <div class="meter-label">照明系统 (kW)</div>
+                </div>
+                <div class="meter">
+                    <div class="meter-value" id="elevatorPower">12.3</div>
+                    <div class="meter-label">电梯系统 (kW)</div>
+                </div>
+                <div class="meter">
+                    <div class="meter-value" id="otherPower">49.4</div>
+                    <div class="meter-label">其他设备 (kW)</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <span>24小时功率趋势图</span>
+                <div class="chart-bar" style="left: 10%; height: 60%;"></div>
+                <div class="chart-bar" style="left: 20%; height: 45%;"></div>
+                <div class="chart-bar" style="left: 30%; height: 70%;"></div>
+                <div class="chart-bar" style="left: 40%; height: 85%;"></div>
+                <div class="chart-bar" style="left: 50%; height: 90%;"></div>
+                <div class="chart-bar" style="left: 60%; height: 75%;"></div>
+                <div class="chart-bar" style="left: 70%; height: 65%;"></div>
+                <div class="chart-bar" style="left: 80%; height: 55%;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>设备运行状态</h3>
+            <div class="status-item">
+                <span class="status-label">主配电柜</span>
+                <span class="status-value status-normal" id="mainPanel">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">UPS电源</span>
+                <span class="status-value status-normal" id="ups">在线 - 98%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">发电机</span>
+                <span class="status-value" id="generator">待机</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">变压器温度</span>
+                <span class="status-value status-warning" id="transformerTemp">65°C</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">功率因数</span>
+                <span class="status-value status-normal" id="powerFactor">0.92</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">谐波失真</span>
+                <span class="status-value status-normal" id="thd">3.2%</span>
+            </div>
+
+            <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">节能目标进度</h4>
+            <div>
+                <span class="status-label">月度节能目标 (15%)</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 68%;" id="savingProgress"></div>
+                </div>
+                <small style="color: #666;">已完成 68% (10.2% 节能)</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>水资源监测</h3>
+            <div class="status-item">
+                <span class="status-label">总用水量</span>
+                <span class="status-value" id="waterTotal">1,245 L/h</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">生活用水</span>
+                <span class="status-value status-normal" id="domesticWater">856 L/h</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">空调用水</span>
+                <span class="status-value status-normal" id="hvacWater">289 L/h</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">消防用水</span>
+                <span class="status-value status-normal" id="fireWater">100 L/h</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">水压监测</span>
+                <span class="status-value status-normal" id="waterPressure">0.35 MPa</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">水质状态</span>
+                <span class="status-value status-normal" id="waterQuality">良好</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>燃气监测</h3>
+            <div class="status-item">
+                <span class="status-label">燃气流量</span>
+                <span class="status-value" id="gasFlow">45.6 m³/h</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">燃气压力</span>
+                <span class="status-value status-normal" id="gasPressure">2.1 kPa</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">泄漏检测</span>
+                <span class="status-value status-normal" id="gasLeak">无泄漏</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">燃气阀门</span>
+                <span class="status-value status-normal" id="gasValve">开启</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">今日消耗</span>
+                <span class="status-value" id="gasConsumption">1,089 m³</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3>能源控制中心</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="control-group">
+                <label>节能模式</label>
+                <select class="control-input" id="energyMode">
+                    <option value="normal">正常模式</option>
+                    <option value="saving">节能模式</option>
+                    <option value="eco">生态模式</option>
+                    <option value="emergency">应急模式</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>负载限制 (%)</label>
+                <input type="range" class="control-input" id="loadLimit" min="50" max="100" value="85">
+                <span id="loadDisplay">85%</span>
+            </div>
+            <div class="control-group">
+                <label>峰谷电价切换</label>
+                <select class="control-input" id="tariffMode">
+                    <option value="auto">自动切换</option>
+                    <option value="peak">峰时电价</option>
+                    <option value="valley">谷时电价</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="applyEnergySettings()">应用设置</button>
+                <button class="btn btn-success" onclick="startOptimization()">启动优化</button>
+                <button class="btn btn-warning" onclick="generateReport()">生成报告</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('zh-CN');
+        }
+
+        // 模拟实时数据更新
+        function updateEnergyData() {
+            // 更新总功率
+            const totalPower = (120 + Math.random() * 20).toFixed(1);
+            document.getElementById('totalPower').textContent = totalPower;
+            
+            // 更新各系统功率
+            document.getElementById('hvacPower').textContent = (40 + Math.random() * 10).toFixed(1);
+            document.getElementById('lightPower').textContent = (15 + Math.random() * 8).toFixed(1);
+            document.getElementById('elevatorPower').textContent = (10 + Math.random() * 5).toFixed(1);
+            document.getElementById('otherPower').textContent = (45 + Math.random() * 10).toFixed(1);
+            
+            // 更新用水量
+            document.getElementById('waterTotal').textContent = Math.floor(1200 + Math.random() * 100) + ' L/h';
+            document.getElementById('domesticWater').textContent = Math.floor(800 + Math.random() * 100) + ' L/h';
+            
+            // 更新燃气流量
+            document.getElementById('gasFlow').textContent = (40 + Math.random() * 10).toFixed(1) + ' m³/h';
+            
+            // 更新变压器温度
+            const temp = Math.floor(60 + Math.random() * 10);
+            const tempElement = document.getElementById('transformerTemp');
+            tempElement.textContent = temp + '°C';
+            
+            if (temp > 70) {
+                tempElement.className = 'status-value status-error';
+            } else if (temp > 65) {
+                tempElement.className = 'status-value status-warning';
+            } else {
+                tempElement.className = 'status-value status-normal';
+            }
+        }
+
+        // 控制面板功能
+        document.getElementById('loadLimit').addEventListener('input', function() {
+            document.getElementById('loadDisplay').textContent = this.value + '%';
+        });
+
+        function applyEnergySettings() {
+            const mode = document.getElementById('energyMode').value;
+            const limit = document.getElementById('loadLimit').value;
+            const tariff = document.getElementById('tariffMode').value;
+            
+            alert(`能源设置已应用：\n模式: ${mode}\n负载限制: ${limit}%\n电价模式: ${tariff}`);
+            
+            // 向主系统发送消息
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'Energy',
+                    message: `能源管理系统设置已更新 - 模式: ${mode}`
+                }, '*');
+            }
+        }
+
+        function startOptimization() {
+            alert('能源优化算法已启动，预计节能效果 12-15%');
+            
+            // 模拟优化进度
+            const progress = document.getElementById('savingProgress');
+            let width = 68;
+            const interval = setInterval(() => {
+                width += 2;
+                progress.style.width = width + '%';
+                if (width >= 85) {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+
+        function generateReport() {
+            alert('能源消耗报告已生成，包含详细的用电、用水、用气分析');
+        }
+
+        // 初始化
+        updateTime();
+        setInterval(updateTime, 60000); // 每分钟更新时间
+        setInterval(updateEnergyData, 4000); // 每4秒更新数据
+    </script>
+</body>
+</html>
+

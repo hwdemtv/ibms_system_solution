@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安防监控系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+
+        .system-header {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .system-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-panel {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-panel.normal {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #dc3545;
+            padding-bottom: 0.5rem;
+        }
+
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .camera-view {
+            background: #000;
+            aspect-ratio: 16/9;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            position: relative;
+        }
+
+        .camera-status {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .camera-status.offline {
+            background: #dc3545;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-normal {
+            color: #28a745;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .access-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .log-success {
+            color: #28a745;
+        }
+
+        .log-warning {
+            color: #ffc107;
+        }
+
+        .log-error {
+            color: #dc3545;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .zone-map {
+            background: #f8f9fa;
+            height: 200px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .zone-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #28a745;
+        }
+
+        .zone-indicator.alert {
+            background: #dc3545;
+            box-shadow: 0 0 0 2px #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="system-header">
+        <h1>安防监控系统</h1>
+        <p>Security Monitoring System - 全方位安全防护与监控</p>
+    </div>
+
+    <div class="alert-panel normal" id="alertPanel">
+        <strong>安全状态：</strong> 系统正常 | 无异常报警 | 最后检查：<span id="lastCheck"></span>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>视频监控</h3>
+            <div class="status-item">
+                <span class="status-label">在线摄像头</span>
+                <span class="status-value status-normal" id="onlineCameras">12/12</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">录像状态</span>
+                <span class="status-value status-normal" id="recordingStatus">正常录制</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">存储空间</span>
+                <span class="status-value status-warning" id="storageSpace">75% 已用</span>
+            </div>
+            
+            <div class="camera-grid">
+                <div class="camera-view">
+                    <span>大厅摄像头</span>
+                    <div class="camera-status"></div>
+                </div>
+                <div class="camera-view">
+                    <span>停车场摄像头</span>
+                    <div class="camera-status"></div>
+                </div>
+                <div class="camera-view">
+                    <span>电梯摄像头</span>
+                    <div class="camera-status"></div>
+                </div>
+                <div class="camera-view">
+                    <span>楼道摄像头</span>
+                    <div class="camera-status offline"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>门禁控制</h3>
+            <div class="status-item">
+                <span class="status-label">主入口</span>
+                <span class="status-value status-normal" id="mainEntrance">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">员工通道</span>
+                <span class="status-value status-normal" id="staffEntrance">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">车库入口</span>
+                <span class="status-value status-normal" id="garageEntrance">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">紧急出口</span>
+                <span class="status-value status-normal" id="emergencyExit">锁定</span>
+            </div>
+            
+            <div class="control-buttons">
+                <button class="btn btn-success" onclick="unlockAll()">全部解锁</button>
+                <button class="btn" onclick="lockAll()">全部锁定</button>
+                <button class="btn btn-secondary" onclick="emergencyMode()">紧急模式</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>入侵检测</h3>
+            <div class="status-item">
+                <span class="status-label">周界防护</span>
+                <span class="status-value status-normal" id="perimeter">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">红外探测器</span>
+                <span class="status-value status-normal" id="infrared">8/8 在线</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">玻璃破碎探测</span>
+                <span class="status-value status-normal" id="glassBreak">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">震动探测</span>
+                <span class="status-value status-normal" id="vibration">正常</span>
+            </div>
+
+            <div class="zone-map">
+                <span>建筑平面图 - 安防区域</span>
+                <div class="zone-indicator" style="top: 20%; left: 30%;"></div>
+                <div class="zone-indicator" style="top: 60%; left: 70%;"></div>
+                <div class="zone-indicator alert" style="top: 80%; left: 20%;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>出入记录</h3>
+            <div class="access-log" id="accessLog">
+                <div class="log-entry log-success">
+                    <div>张三 - 刷卡进入</div>
+                    <div class="log-time">2024-06-11 14:32:15</div>
+                </div>
+                <div class="log-entry log-success">
+                    <div>李四 - 刷卡进入</div>
+                    <div class="log-time">2024-06-11 14:28:42</div>
+                </div>
+                <div class="log-entry log-warning">
+                    <div>未知卡片 - 尝试进入</div>
+                    <div class="log-time">2024-06-11 14:15:33</div>
+                </div>
+                <div class="log-entry log-success">
+                    <div>王五 - 刷卡离开</div>
+                    <div class="log-time">2024-06-11 14:10:18</div>
+                </div>
+                <div class="log-entry log-error">
+                    <div>强制开门 - 紧急出口</div>
+                    <div class="log-time">2024-06-11 13:45:22</div>
+                </div>
+            </div>
+            
+            <div class="control-buttons">
+                <button class="btn btn-secondary" onclick="exportLog()">导出记录</button>
+                <button class="btn btn-secondary" onclick="clearLog()">清空记录</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lastCheck').textContent = now.toLocaleString('zh-CN');
+        }
+
+        // 模拟实时数据更新
+        function updateSecurityData() {
+            // 模拟存储空间变化
+            const storage = Math.floor(70 + Math.random() * 10);
+            const storageElement = document.getElementById('storageSpace');
+            storageElement.textContent = storage + '% 已用';
+            
+            if (storage > 80) {
+                storageElement.className = 'status-value status-error';
+            } else if (storage > 70) {
+                storageElement.className = 'status-value status-warning';
+            } else {
+                storageElement.className = 'status-value status-normal';
+            }
+
+            // 模拟新的出入记录
+            if (Math.random() < 0.1) { // 10% 概率添加新记录
+                addNewAccessLog();
+            }
+        }
+
+        // 添加新的出入记录
+        function addNewAccessLog() {
+            const names = ['张三', '李四', '王五', '赵六', '钱七'];
+            const actions = ['刷卡进入', '刷卡离开', '指纹识别进入'];
+            const name = names[Math.floor(Math.random() * names.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const now = new Date();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry log-success';
+            logEntry.innerHTML = `
+                <div>${name} - ${action}</div>
+                <div class="log-time">${now.toLocaleString('zh-CN')}</div>
+            `;
+            
+            const logContainer = document.getElementById('accessLog');
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // 保持最多10条记录
+            while (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // 门禁控制功能
+        function unlockAll() {
+            alert('所有门禁已解锁');
+            // 向主系统发送消息
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'Security',
+                    message: '安防系统：所有门禁已解锁'
+                }, '*');
+            }
+        }
+
+        function lockAll() {
+            alert('所有门禁已锁定');
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'Security',
+                    message: '安防系统：所有门禁已锁定'
+                }, '*');
+            }
+        }
+
+        function emergencyMode() {
+            const alertPanel = document.getElementById('alertPanel');
+            alertPanel.className = 'alert-panel';
+            alertPanel.innerHTML = '<strong>紧急模式已启动！</strong> 所有出入口已解锁，安全人员已通知';
+            
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'Security',
+                    message: '安防系统：紧急模式已启动！'
+                }, '*');
+            }
+        }
+
+        function exportLog() {
+            alert('出入记录已导出到本地文件');
+        }
+
+        function clearLog() {
+            if (confirm('确定要清空所有出入记录吗？')) {
+                document.getElementById('accessLog').innerHTML = '';
+            }
+        }
+
+        // 初始化
+        updateTime();
+        setInterval(updateTime, 60000); // 每分钟更新时间
+        setInterval(updateSecurityData, 3000); // 每3秒更新数据
+    </script>
+</body>
+</html>
+

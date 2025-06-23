@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库系统 - IBMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-icon {
+            font-size: 2rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-detail {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .iframe-wrapper {
+            width: 100%;
+            height: calc(100vh - 200px);
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .retry-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .direct-access-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .direct-access-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .iframe-wrapper {
+                height: calc(100vh - 250px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span class="header-icon">📚</span>
+            知识库系统
+        </h1>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="status-text">正在连接...</span>
+            <a href="http://bk.hubinwei.top" target="_blank" class="direct-access-button">直接访问</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="loading-container" id="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loading-text">正在自动登录知识库系统...</div>
+            <div class="loading-detail" id="loading-detail">请稍候，系统正在为您建立安全连接</div>
+        </div>
+
+        <div class="error-container" id="error-container">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">连接失败</div>
+            <div class="error-message" id="error-message">
+                无法自动登录知识库系统。这可能是由于网络问题或服务器暂时不可用。
+                <br><br>
+                <strong>解决方案：</strong>
+                <br>• 检查网络连接是否正常
+                <br>• 尝试直接访问 <a href="http://bk.hubinwei.top" target="_blank">bk.hubinwei.top</a>
+                <br>• 如果问题持续存在，请联系系统管理员
+            </div>
+            <button class="retry-button" onclick="retryLogin()">重新尝试</button>
+        </div>
+
+        <iframe 
+            id="knowledgeBaseFrame"
+            class="iframe-wrapper"
+            title="知识库系统"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+            loading="lazy">
+        </iframe>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        let loginAttempts = 0;
+        const maxAttempts = 3;
+
+        // 页面加载时自动尝试登录
+        document.addEventListener('DOMContentLoaded', function() {
+            attemptAutoLogin();
+        });
+
+        async function attemptAutoLogin() {
+            const loadingContainer = document.getElementById('loading-container');
+            const errorContainer = document.getElementById('error-container');
+            const iframe = document.getElementById('knowledgeBaseFrame');
+            const statusText = document.getElementById('status-text');
+            const loadingText = document.getElementById('loading-text');
+            const loadingDetail = document.getElementById('loading-detail');
+
+            loginAttempts++;
+            
+            // 显示加载状态
+            loadingContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            iframe.style.display = 'none';
+            statusText.textContent = '正在连接...';
+
+            try {
+                // 更新加载文本
+                loadingText.textContent = `正在自动登录知识库系统... (${loginAttempts}/${maxAttempts})`;
+                loadingDetail.textContent = '正在验证用户凭据并建立安全连接';
+
+                // 调用后端代理登录API
+                const response = await fetch(`${API_BASE_URL}/proxy/blinko-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 登录成功
+                    statusText.textContent = '已连接';
+                    loadingText.textContent = '登录成功，正在加载知识库...';
+                    loadingDetail.textContent = '即将跳转到知识库主页面';
+
+                    // 延迟一下再显示iframe，让用户看到成功消息
+                    setTimeout(() => {
+                        loadingContainer.style.display = 'none';
+                        iframe.style.display = 'block';
+                        
+                        // 使用代理URL加载已登录的页面
+                        iframe.src = `${API_BASE_URL}/proxy/blinko-proxy/`;
+                        
+                        // 设置iframe加载超时
+                        setLoadTimeout();
+                    }, 1500);
+
+                } else {
+                    throw new Error(result.message || '登录失败');
+                }
+
+            } catch (error) {
+                console.error('自动登录失败:', error);
+                
+                if (loginAttempts < maxAttempts) {
+                    // 还有重试机会，等待后重试
+                    loadingText.textContent = `登录失败，正在重试... (${loginAttempts}/${maxAttempts})`;
+                    loadingDetail.textContent = `${3 - loginAttempts + 1}秒后自动重试`;
+                    
+                    let countdown = 3;
+                    const countdownInterval = setInterval(() => {
+                        countdown--;
+                        loadingDetail.textContent = `${countdown}秒后自动重试`;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(countdownInterval);
+                            attemptAutoLogin();
+                        }
+                    }, 1000);
+                } else {
+                    // 达到最大重试次数，显示错误
+                    showError(error.message);
+                }
+            }
+        }
+
+        function showError(message) {
+            const loadingContainer = document.getElementById('loading-container');
+            const errorContainer = document.getElementById('error-container');
+            const statusText = document.getElementById('status-text');
+            const errorMessage = document.getElementById('error-message');
+
+            loadingContainer.style.display = 'none';
+            errorContainer.style.display = 'block';
+            statusText.textContent = '连接失败';
+
+            if (message) {
+                errorMessage.innerHTML = `
+                    自动登录失败：${message}
+                    <br><br>
+                    <strong>解决方案：</strong>
+                    <br>• 检查网络连接是否正常
+                    <br>• 尝试直接访问 <a href="http://bk.hubinwei.top" target="_blank">bk.hubinwei.top</a>
+                    <br>• 如果问题持续存在，请联系系统管理员
+                `;
+            }
+        }
+
+        function retryLogin() {
+            loginAttempts = 0;
+            attemptAutoLogin();
+        }
+
+        function setLoadTimeout() {
+            const iframe = document.getElementById('knowledgeBaseFrame');
+            
+            // 设置15秒超时
+            const timeout = setTimeout(() => {
+                if (iframe.style.display === 'block') {
+                    showError('页面加载超时，请尝试直接访问知识库网站');
+                }
+            }, 15000);
+
+            // iframe加载完成后清除超时
+            iframe.onload = function() {
+                clearTimeout(timeout);
+                document.getElementById('status-text').textContent = '已连接';
+            };
+
+            // iframe加载错误处理
+            iframe.onerror = function() {
+                clearTimeout(timeout);
+                showError('无法加载知识库页面');
+            };
+        }
+
+        // 监听来自iframe的消息
+        window.addEventListener('message', function(event) {
+            // 这里可以处理来自知识库系统的消息
+            if (event.origin === 'http://bk.hubinwei.top') {
+                console.log('收到知识库消息:', event.data);
+            }
+        });
+
+        // 定期检查登录状态
+        setInterval(async function() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/proxy/blinko-status`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (!result.logged_in) {
+                    // 登录状态丢失，重新登录
+                    console.log('检测到登录状态丢失，正在重新登录...');
+                    retryLogin();
+                }
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+            }
+        }, 5 * 60 * 1000); // 每5分钟检查一次
+    </script>
+</body>
+</html>
+

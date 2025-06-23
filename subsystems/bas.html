@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>楼宇自控系统 (BAS)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+
+        .system-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .system-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-normal {
+            color: #28a745;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            margin-top: 1rem;
+        }
+
+        .alert {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="system-header">
+        <h1>楼宇自控系统 (BAS)</h1>
+        <p>Building Automation System - 智能环境控制与设备管理</p>
+    </div>
+
+    <div class="alert">
+        <strong>系统状态：</strong> 正常运行 | 最后更新：<span id="lastUpdate"></span>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>环境监测</h3>
+            <div class="status-item">
+                <span class="status-label">室内温度</span>
+                <span class="status-value status-normal" id="temperature">23.5°C</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">室内湿度</span>
+                <span class="status-value status-normal" id="humidity">45%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">空气质量</span>
+                <span class="status-value status-normal" id="airQuality">良好</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">光照强度</span>
+                <span class="status-value" id="lightLevel">450 Lux</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>空调系统</h3>
+            <div class="status-item">
+                <span class="status-label">系统状态</span>
+                <span class="status-value status-normal" id="hvacStatus">运行中</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">设定温度</span>
+                <span class="status-value" id="setTemp">24°C</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">风机转速</span>
+                <span class="status-value" id="fanSpeed">75%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">能耗功率</span>
+                <span class="status-value" id="power">12.5 kW</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>照明系统</h3>
+            <div class="status-item">
+                <span class="status-label">照明区域1</span>
+                <span class="status-value status-normal" id="light1">开启 - 80%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">照明区域2</span>
+                <span class="status-value status-normal" id="light2">开启 - 60%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">照明区域3</span>
+                <span class="status-value" id="light3">关闭</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">应急照明</span>
+                <span class="status-value status-normal" id="emergencyLight">待机</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>通风系统</h3>
+            <div class="status-item">
+                <span class="status-label">新风系统</span>
+                <span class="status-value status-normal" id="freshAir">运行中</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">排风系统</span>
+                <span class="status-value status-normal" id="exhaust">运行中</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">风量调节</span>
+                <span class="status-value" id="airFlow">65%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">过滤器状态</span>
+                <span class="status-value status-warning" id="filter">需更换</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3>快速控制</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="control-group">
+                <label for="tempControl">温度设定</label>
+                <input type="range" id="tempControl" class="control-input" min="18" max="28" value="24">
+                <span id="tempDisplay">24°C</span>
+            </div>
+            <div class="control-group">
+                <label for="lightControl">照明亮度</label>
+                <input type="range" id="lightControl" class="control-input" min="0" max="100" value="70">
+                <span id="lightDisplay">70%</span>
+            </div>
+            <div class="control-group">
+                <label for="fanControl">风机转速</label>
+                <input type="range" id="fanControl" class="control-input" min="0" max="100" value="75">
+                <span id="fanDisplay">75%</span>
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="applySettings()">应用设置</button>
+                <button class="btn btn-secondary" onclick="resetSettings()">重置</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div>能耗趋势图 (模拟数据)</div>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('zh-CN');
+        }
+
+        // 模拟数据更新
+        function updateSensorData() {
+            // 模拟温度变化
+            const temp = (22 + Math.random() * 4).toFixed(1);
+            document.getElementById('temperature').textContent = temp + '°C';
+            
+            // 模拟湿度变化
+            const humidity = Math.floor(40 + Math.random() * 20);
+            document.getElementById('humidity').textContent = humidity + '%';
+            
+            // 模拟功率变化
+            const power = (10 + Math.random() * 5).toFixed(1);
+            document.getElementById('power').textContent = power + ' kW';
+        }
+
+        // 控制面板功能
+        document.getElementById('tempControl').addEventListener('input', function() {
+            document.getElementById('tempDisplay').textContent = this.value + '°C';
+        });
+
+        document.getElementById('lightControl').addEventListener('input', function() {
+            document.getElementById('lightDisplay').textContent = this.value + '%';
+        });
+
+        document.getElementById('fanControl').addEventListener('input', function() {
+            document.getElementById('fanDisplay').textContent = this.value + '%';
+        });
+
+        function applySettings() {
+            alert('设置已应用！');
+            // 向主系统发送消息
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'BAS',
+                    message: '楼宇自控系统设置已更新'
+                }, '*');
+            }
+        }
+
+        function resetSettings() {
+            document.getElementById('tempControl').value = 24;
+            document.getElementById('lightControl').value = 70;
+            document.getElementById('fanControl').value = 75;
+            document.getElementById('tempDisplay').textContent = '24°C';
+            document.getElementById('lightDisplay').textContent = '70%';
+            document.getElementById('fanDisplay').textContent = '75%';
+        }
+
+        // 初始化
+        updateTime();
+        setInterval(updateTime, 60000); // 每分钟更新时间
+        setInterval(updateSensorData, 5000); // 每5秒更新传感器数据
+    </script>
+</body>
+</html>
+

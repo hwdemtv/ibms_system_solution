@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公共广播系统 - IBMS智能建筑管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .mode-selector {
+            margin-bottom: 25px;
+        }
+
+        .mode-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .mode-btn:hover {
+            background: #d5dbdb;
+            transform: translateX(5px);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .zone-selector {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .zone-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .zone-item:last-child {
+            border-bottom: none;
+        }
+
+        .zone-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .zone-item label {
+            cursor: pointer;
+            flex: 1;
+            color: #2c3e50;
+        }
+
+        .zone-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #27ae60;
+            margin-left: 10px;
+        }
+
+        .zone-status.offline {
+            background: #e74c3c;
+        }
+
+        .content-area {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-panel {
+            display: none;
+        }
+
+        .control-panel.active {
+            display: block;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .control-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn.play {
+            background: #27ae60;
+            color: white;
+        }
+
+        .control-btn.pause {
+            background: #f39c12;
+            color: white;
+        }
+
+        .control-btn.stop {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .volume-control {
+            margin-bottom: 20px;
+        }
+
+        .volume-control label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ecf0f1;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .status-display {
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .status-display.error {
+            background: #fdf2f2;
+            border-left-color: #e74c3c;
+        }
+
+        .program-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+        }
+
+        .program-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .program-item:hover {
+            background: #f8f9fa;
+        }
+
+        .program-item:last-child {
+            border-bottom: none;
+        }
+
+        .program-item.active {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .program-icon {
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .program-info {
+            flex: 1;
+        }
+
+        .program-name {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .program-duration {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .paging-panel {
+            margin-top: 20px;
+        }
+
+        .paging-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .paging-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .paging-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .timer-panel {
+            margin-top: 20px;
+        }
+
+        .timer-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .timer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .timer-item:last-child {
+            border-bottom: none;
+        }
+
+        .timer-info {
+            flex: 1;
+        }
+
+        .timer-time {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .timer-content {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .timer-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .timer-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .timer-btn.edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .timer-btn.delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .system-status {
+            margin-bottom: 25px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .status-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #27ae60;
+        }
+
+        .status-indicator.warning {
+            background: #f39c12;
+        }
+
+        .status-indicator.error {
+            background: #e74c3c;
+        }
+
+        .log-panel {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .log-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 12px;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #7f8c8d;
+            margin-right: 10px;
+        }
+
+        .log-message {
+            color: #2c3e50;
+        }
+
+        .log-item.info {
+            border-left: 3px solid #3498db;
+        }
+
+        .log-item.warning {
+            border-left: 3px solid #f39c12;
+        }
+
+        .log-item.error {
+            border-left: 3px solid #e74c3c;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sidebar, .status-panel {
+                order: 2;
+            }
+            
+            .content-area {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .control-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .control-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="icon">📢</div>
+                公共广播系统
+            </h1>
+            <p>智能建筑公共广播管理与控制平台 - 背景音乐、通知发布、紧急广播、寻呼管理</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 左侧控制面板 -->
+            <div class="sidebar">
+                <div class="mode-selector">
+                    <h3>广播模式</h3>
+                    <button class="mode-btn active" data-mode="background">🎵 背景音乐</button>
+                    <button class="mode-btn" data-mode="announcement">📢 通知发布</button>
+                    <button class="mode-btn" data-mode="emergency">🚨 紧急广播</button>
+                    <button class="mode-btn" data-mode="paging">📞 寻呼功能</button>
+                    <button class="mode-btn" data-mode="timer">⏰ 定时任务</button>
+                </div>
+
+                <div class="zone-selector">
+                    <h3>广播区域</h3>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-all" checked>
+                        <label for="zone-all">全部区域</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-1f-lobby">
+                        <label for="zone-1f-lobby">1F 大厅</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-1f-corridor">
+                        <label for="zone-1f-corridor">1F 走廊</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-2f-office">
+                        <label for="zone-2f-office">2F 办公区</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-2f-meeting">
+                        <label for="zone-2f-meeting">2F 会议室</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-3f-office">
+                        <label for="zone-3f-office">3F 办公区</label>
+                        <div class="zone-status"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-parking">
+                        <label for="zone-parking">地下停车场</label>
+                        <div class="zone-status offline"></div>
+                    </div>
+                    <div class="zone-item">
+                        <input type="checkbox" id="zone-garden">
+                        <label for="zone-garden">花园广场</label>
+                        <div class="zone-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央内容区 -->
+            <div class="content-area">
+                <!-- 背景音乐控制面板 -->
+                <div class="control-panel active" id="background-panel">
+                    <div class="control-section">
+                        <h4>播放控制</h4>
+                        <div class="control-buttons">
+                            <button class="control-btn play" onclick="playMusic()">
+                                ▶️ 播放
+                            </button>
+                            <button class="control-btn pause" onclick="pauseMusic()">
+                                ⏸️ 暂停
+                            </button>
+                            <button class="control-btn stop" onclick="stopMusic()">
+                                ⏹️ 停止
+                            </button>
+                        </div>
+                        <div class="volume-control">
+                            <label for="volume">音量控制</label>
+                            <input type="range" id="volume" class="volume-slider" min="0" max="100" value="65" onchange="adjustVolume(this.value)">
+                            <div style="text-align: center; margin-top: 5px; color: #7f8c8d;">当前音量: <span id="volume-display">65</span>%</div>
+                        </div>
+                        <div class="status-display" id="play-status">
+                            🎵 当前状态：正在播放 "轻音乐合集 - 春日序曲"
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h4>节目库</h4>
+                        <div class="program-list">
+                            <div class="program-item active" onclick="selectProgram(this, '轻音乐合集 - 春日序曲')">
+                                <div class="program-icon">🎼</div>
+                                <div class="program-info">
+                                    <div class="program-name">轻音乐合集 - 春日序曲</div>
+                                    <div class="program-duration">时长: 45:32</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectProgram(this, '古典音乐精选')">
+                                <div class="program-icon">🎻</div>
+                                <div class="program-info">
+                                    <div class="program-name">古典音乐精选</div>
+                                    <div class="program-duration">时长: 62:18</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectProgram(this, '爵士乐经典')">
+                                <div class="program-icon">🎷</div>
+                                <div class="program-info">
+                                    <div class="program-name">爵士乐经典</div>
+                                    <div class="program-duration">时长: 38:45</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectProgram(this, '自然音效')">
+                                <div class="program-icon">🌿</div>
+                                <div class="program-info">
+                                    <div class="program-name">自然音效</div>
+                                    <div class="program-duration">时长: 30:00</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectProgram(this, '钢琴独奏')">
+                                <div class="program-icon">🎹</div>
+                                <div class="program-info">
+                                    <div class="program-name">钢琴独奏</div>
+                                    <div class="program-duration">时长: 52:30</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知发布控制面板 -->
+                <div class="control-panel" id="announcement-panel">
+                    <div class="control-section">
+                        <h4>通知发布</h4>
+                        <div class="control-buttons">
+                            <button class="control-btn play" onclick="startAnnouncement()">
+                                📢 开始广播
+                            </button>
+                            <button class="control-btn stop" onclick="stopAnnouncement()">
+                                ⏹️ 停止广播
+                            </button>
+                        </div>
+                        <div class="volume-control">
+                            <label for="announcement-volume">广播音量</label>
+                            <input type="range" id="announcement-volume" class="volume-slider" min="0" max="100" value="80">
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h4>预录制通知</h4>
+                        <div class="program-list">
+                            <div class="program-item" onclick="selectAnnouncement(this, '上班时间提醒')">
+                                <div class="program-icon">⏰</div>
+                                <div class="program-info">
+                                    <div class="program-name">上班时间提醒</div>
+                                    <div class="program-duration">时长: 0:15</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectAnnouncement(this, '午休时间通知')">
+                                <div class="program-icon">🍽️</div>
+                                <div class="program-info">
+                                    <div class="program-name">午休时间通知</div>
+                                    <div class="program-duration">时长: 0:12</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectAnnouncement(this, '下班时间提醒')">
+                                <div class="program-icon">🏠</div>
+                                <div class="program-info">
+                                    <div class="program-name">下班时间提醒</div>
+                                    <div class="program-duration">时长: 0:18</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectAnnouncement(this, '会议室预约提醒')">
+                                <div class="program-icon">📅</div>
+                                <div class="program-info">
+                                    <div class="program-name">会议室预约提醒</div>
+                                    <div class="program-duration">时长: 0:20</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 紧急广播控制面板 -->
+                <div class="control-panel" id="emergency-panel">
+                    <div class="control-section">
+                        <h4>紧急广播控制</h4>
+                        <div class="control-buttons">
+                            <button class="control-btn stop" onclick="startEmergency()" style="background: #e74c3c; font-size: 16px; padding: 15px 25px;">
+                                🚨 启动紧急广播
+                            </button>
+                            <button class="control-btn pause" onclick="stopEmergency()">
+                                ⏹️ 停止紧急广播
+                            </button>
+                        </div>
+                        <div class="status-display" id="emergency-status">
+                            ✅ 紧急广播系统正常，待命状态
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h4>紧急预案</h4>
+                        <div class="program-list">
+                            <div class="program-item" onclick="selectEmergency(this, '火灾疏散')">
+                                <div class="program-icon">🔥</div>
+                                <div class="program-info">
+                                    <div class="program-name">火灾疏散广播</div>
+                                    <div class="program-duration">自动循环播放</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectEmergency(this, '地震避险')">
+                                <div class="program-icon">🌍</div>
+                                <div class="program-info">
+                                    <div class="program-name">地震避险广播</div>
+                                    <div class="program-duration">自动循环播放</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectEmergency(this, '安全警报')">
+                                <div class="program-icon">⚠️</div>
+                                <div class="program-info">
+                                    <div class="program-name">安全警报广播</div>
+                                    <div class="program-duration">自动循环播放</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectEmergency(this, '全员集合')">
+                                <div class="program-icon">👥</div>
+                                <div class="program-info">
+                                    <div class="program-name">全员集合广播</div>
+                                    <div class="program-duration">自动循环播放</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 寻呼功能控制面板 -->
+                <div class="control-panel" id="paging-panel">
+                    <div class="control-section">
+                        <h4>寻呼广播</h4>
+                        <div class="paging-panel">
+                            <textarea class="paging-input" placeholder="请输入寻呼内容..." id="paging-content"></textarea>
+                            <div class="paging-controls">
+                                <button class="control-btn play" onclick="startPaging()">
+                                    📞 开始寻呼
+                                </button>
+                                <button class="control-btn stop" onclick="stopPaging()">
+                                    ⏹️ 结束寻呼
+                                </button>
+                            </div>
+                        </div>
+                        <div class="volume-control">
+                            <label for="paging-volume">寻呼音量</label>
+                            <input type="range" id="paging-volume" class="volume-slider" min="0" max="100" value="85">
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h4>常用寻呼</h4>
+                        <div class="program-list">
+                            <div class="program-item" onclick="selectPaging(this, '请张三到前台领取快递')">
+                                <div class="program-icon">📦</div>
+                                <div class="program-info">
+                                    <div class="program-name">快递领取通知</div>
+                                    <div class="program-duration">模板消息</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectPaging(this, '请李四到会议室参加会议')">
+                                <div class="program-icon">📋</div>
+                                <div class="program-info">
+                                    <div class="program-name">会议通知</div>
+                                    <div class="program-duration">模板消息</div>
+                                </div>
+                            </div>
+                            <div class="program-item" onclick="selectPaging(this, '请王五到人事部办理手续')">
+                                <div class="program-icon">📄</div>
+                                <div class="program-info">
+                                    <div class="program-name">办事通知</div>
+                                    <div class="program-duration">模板消息</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 定时任务控制面板 -->
+                <div class="control-panel" id="timer-panel">
+                    <div class="control-section">
+                        <h4>定时任务管理</h4>
+                        <div class="timer-panel">
+                            <div class="timer-list">
+                                <div class="timer-item">
+                                    <div class="timer-info">
+                                        <div class="timer-time">08:30 - 工作日</div>
+                                        <div class="timer-content">播放上班提醒音乐</div>
+                                    </div>
+                                    <div class="timer-actions">
+                                        <button class="timer-btn edit" onclick="editTimer(this)">编辑</button>
+                                        <button class="timer-btn delete" onclick="deleteTimer(this)">删除</button>
+                                    </div>
+                                </div>
+                                <div class="timer-item">
+                                    <div class="timer-info">
+                                        <div class="timer-time">12:00 - 每天</div>
+                                        <div class="timer-content">播放午休音乐</div>
+                                    </div>
+                                    <div class="timer-actions">
+                                        <button class="timer-btn edit" onclick="editTimer(this)">编辑</button>
+                                        <button class="timer-btn delete" onclick="deleteTimer(this)">删除</button>
+                                    </div>
+                                </div>
+                                <div class="timer-item">
+                                    <div class="timer-info">
+                                        <div class="timer-time">18:00 - 工作日</div>
+                                        <div class="timer-content">播放下班提醒</div>
+                                    </div>
+                                    <div class="timer-actions">
+                                        <button class="timer-btn edit" onclick="editTimer(this)">编辑</button>
+                                        <button class="timer-btn delete" onclick="deleteTimer(this)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="control-buttons">
+                                <button class="control-btn play" onclick="addTimer()">
+                                    ➕ 添加任务
+                                </button>
+                                <button class="control-btn pause" onclick="pauseAllTimers()">
+                                    ⏸️ 暂停所有
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧状态面板 -->
+            <div class="status-panel">
+                <h3>系统状态</h3>
+                <div class="system-status">
+                    <div class="status-item">
+                        <span class="status-label">主功放</span>
+                        <div class="status-value">
+                            <div class="status-indicator"></div>
+                            <span>正常</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">备用功放</span>
+                        <div class="status-value">
+                            <div class="status-indicator"></div>
+                            <span>待机</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">音源设备</span>
+                        <div class="status-value">
+                            <div class="status-indicator"></div>
+                            <span>正常</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">扬声器</span>
+                        <div class="status-value">
+                            <div class="status-indicator warning"></div>
+                            <span>7/8 正常</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">网络连接</span>
+                        <div class="status-value">
+                            <div class="status-indicator"></div>
+                            <span>正常</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">消防联动</span>
+                        <div class="status-value">
+                            <div class="status-indicator"></div>
+                            <span>正常</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>操作日志</h3>
+                <div class="log-panel">
+                    <div class="log-item info">
+                        <span class="log-time">14:32:15</span>
+                        <span class="log-message">开始播放背景音乐 - 轻音乐合集</span>
+                    </div>
+                    <div class="log-item info">
+                        <span class="log-time">14:30:00</span>
+                        <span class="log-message">定时任务：午休音乐播放结束</span>
+                    </div>
+                    <div class="log-item warning">
+                        <span class="log-time">14:25:33</span>
+                        <span class="log-message">地下停车场扬声器离线</span>
+                    </div>
+                    <div class="log-item info">
+                        <span class="log-time">14:20:12</span>
+                        <span class="log-message">音量调整至65%</span>
+                    </div>
+                    <div class="log-item info">
+                        <span class="log-time">14:15:45</span>
+                        <span class="log-message">用户登录：管理员</span>
+                    </div>
+                    <div class="log-item info">
+                        <span class="log-time">12:00:00</span>
+                        <span class="log-message">定时任务：午休音乐开始播放</span>
+                    </div>
+                    <div class="log-item error">
+                        <span class="log-time">11:45:22</span>
+                        <span class="log-message">系统自检发现设备异常</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模式切换功能
+        function switchMode(mode) {
+            // 隐藏所有面板
+            document.querySelectorAll('.control-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // 显示选中的面板
+            document.getElementById(mode + '-panel').classList.add('active');
+            
+            // 更新按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            
+            addLog(`切换到${getModeText(mode)}模式`);
+        }
+
+        function getModeText(mode) {
+            const modeTexts = {
+                'background': '背景音乐',
+                'announcement': '通知发布',
+                'emergency': '紧急广播',
+                'paging': '寻呼功能',
+                'timer': '定时任务'
+            };
+            return modeTexts[mode] || mode;
+        }
+
+        // 背景音乐控制
+        function playMusic() {
+            updatePlayStatus('🎵 正在播放背景音乐');
+            addLog('开始播放背景音乐');
+        }
+
+        function pauseMusic() {
+            updatePlayStatus('⏸️ 背景音乐已暂停');
+            addLog('暂停背景音乐');
+        }
+
+        function stopMusic() {
+            updatePlayStatus('⏹️ 背景音乐已停止');
+            addLog('停止背景音乐');
+        }
+
+        function adjustVolume(value) {
+            document.getElementById('volume-display').textContent = value;
+            addLog(`音量调整至${value}%`);
+        }
+
+        function updatePlayStatus(status) {
+            document.getElementById('play-status').innerHTML = status;
+        }
+
+        function selectProgram(element, programName) {
+            // 移除其他选中状态
+            document.querySelectorAll('.program-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // 添加选中状态
+            element.classList.add('active');
+            updatePlayStatus(`🎵 已选择：${programName}`);
+            addLog(`选择节目：${programName}`);
+        }
+
+        // 通知发布控制
+        function startAnnouncement() {
+            addLog('开始通知广播');
+            updateAnnouncementStatus('📢 正在发布通知');
+        }
+
+        function stopAnnouncement() {
+            addLog('停止通知广播');
+            updateAnnouncementStatus('⏹️ 通知广播已停止');
+        }
+
+        function selectAnnouncement(element, announcementName) {
+            document.querySelectorAll('#announcement-panel .program-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            addLog(`选择通知：${announcementName}`);
+        }
+
+        function updateAnnouncementStatus(status) {
+            // 可以添加状态显示元素
+            console.log(status);
+        }
+
+        // 紧急广播控制
+        function startEmergency() {
+            if (confirm('确定要启动紧急广播吗？这将覆盖所有其他广播内容。')) {
+                document.getElementById('emergency-status').innerHTML = '🚨 紧急广播已启动！';
+                document.getElementById('emergency-status').className = 'status-display error';
+                addLog('启动紧急广播', 'error');
+            }
+        }
+
+        function stopEmergency() {
+            document.getElementById('emergency-status').innerHTML = '✅ 紧急广播系统正常，待命状态';
+            document.getElementById('emergency-status').className = 'status-display';
+            addLog('停止紧急广播');
+        }
+
+        function selectEmergency(element, emergencyType) {
+            document.querySelectorAll('#emergency-panel .program-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            addLog(`选择紧急预案：${emergencyType}`);
+        }
+
+        // 寻呼功能
+        function startPaging() {
+            const content = document.getElementById('paging-content').value;
+            if (content.trim()) {
+                addLog(`开始寻呼：${content}`);
+            } else {
+                alert('请输入寻呼内容');
+            }
+        }
+
+        function stopPaging() {
+            addLog('结束寻呼');
+        }
+
+        function selectPaging(element, pagingContent) {
+            document.getElementById('paging-content').value = pagingContent;
+            addLog(`选择寻呼模板：${pagingContent}`);
+        }
+
+        // 定时任务管理
+        function addTimer() {
+            const time = prompt('请输入时间 (格式: HH:MM):');
+            const content = prompt('请输入任务内容:');
+            if (time && content) {
+                addLog(`添加定时任务：${time} - ${content}`);
+                // 这里可以添加到定时任务列表
+            }
+        }
+
+        function editTimer(button) {
+            const timerItem = button.closest('.timer-item');
+            const timeText = timerItem.querySelector('.timer-time').textContent;
+            const contentText = timerItem.querySelector('.timer-content').textContent;
+            addLog(`编辑定时任务：${timeText}`);
+        }
+
+        function deleteTimer(button) {
+            if (confirm('确定要删除这个定时任务吗？')) {
+                const timerItem = button.closest('.timer-item');
+                const timeText = timerItem.querySelector('.timer-time').textContent;
+                timerItem.remove();
+                addLog(`删除定时任务：${timeText}`);
+            }
+        }
+
+        function pauseAllTimers() {
+            addLog('暂停所有定时任务');
+        }
+
+        // 区域选择功能
+        function toggleAllZones() {
+            const allCheckbox = document.getElementById('zone-all');
+            const zoneCheckboxes = document.querySelectorAll('.zone-item input[type="checkbox"]:not(#zone-all)');
+            
+            zoneCheckboxes.forEach(checkbox => {
+                checkbox.checked = allCheckbox.checked;
+            });
+        }
+
+        // 日志功能
+        function addLog(message, type = 'info') {
+            const logPanel = document.querySelector('.log-panel');
+            const logItem = document.createElement('div');
+            logItem.className = `log-item ${type}`;
+            
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            
+            logItem.innerHTML = `
+                <span class="log-time">${timeString}</span>
+                <span class="log-message">${message}</span>
+            `;
+            
+            logPanel.insertBefore(logItem, logPanel.firstChild);
+            
+            // 限制日志条数
+            const logItems = logPanel.querySelectorAll('.log-item');
+            if (logItems.length > 20) {
+                logItems[logItems.length - 1].remove();
+            }
+        }
+
+        // 初始化事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模式切换按钮事件
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.getAttribute('data-mode');
+                    switchMode(mode);
+                });
+            });
+
+            // 全选区域事件
+            document.getElementById('zone-all').addEventListener('change', toggleAllZones);
+
+            // 音量滑块事件
+            document.getElementById('volume').addEventListener('input', function() {
+                document.getElementById('volume-display').textContent = this.value;
+            });
+
+            // 初始化日志
+            addLog('公共广播系统启动完成');
+            addLog('系统自检通过');
+        });
+
+        // 模拟实时状态更新
+        setInterval(function() {
+            // 这里可以添加实时状态更新逻辑
+            // 例如：从后端获取设备状态、更新日志等
+        }, 30000); // 每30秒更新一次
+    </script>
+</body>
+</html>
+

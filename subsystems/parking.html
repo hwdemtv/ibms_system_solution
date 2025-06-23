@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停车管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+
+        .system-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .system-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .parking-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6f42c1;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #6f42c1;
+            padding-bottom: 0.5rem;
+        }
+
+        .parking-map {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            margin-top: 1rem;
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .parking-spot {
+            aspect-ratio: 1;
+            background: #28a745;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .parking-spot:hover {
+            transform: scale(1.1);
+        }
+
+        .parking-spot.occupied {
+            background: #dc3545;
+        }
+
+        .parking-spot.reserved {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .parking-spot.disabled {
+            background: #6c757d;
+        }
+
+        .parking-spot.vip {
+            background: #e83e8c;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-normal {
+            color: #28a745;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .vehicle-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background: white;
+            border-left: 4px solid #6f42c1;
+        }
+
+        .log-entry.exit {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.violation {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .log-time {
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .log-message {
+            color: #333;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            margin-right: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #5a32a3;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .revenue-chart {
+            height: 150px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .chart-bar {
+            background: #6f42c1;
+            width: 20px;
+            border-radius: 2px 2px 0 0;
+            position: relative;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="system-header">
+        <h1>停车管理系统</h1>
+        <p>Parking Management System - 智能停车场管理与收费</p>
+    </div>
+
+    <div class="parking-summary">
+        <div class="summary-card">
+            <div class="summary-value" id="totalSpots">150</div>
+            <div class="summary-label">总车位</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="occupiedSpots">87</div>
+            <div class="summary-label">已占用</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="availableSpots">63</div>
+            <div class="summary-label">可用车位</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="occupancyRate">58%</div>
+            <div class="summary-label">占用率</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="dailyRevenue">¥2,340</div>
+            <div class="summary-label">今日收入</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>停车场地图</h3>
+            <div class="parking-map" id="parkingMap">
+                <!-- 车位将通过JavaScript动态生成 -->
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>空闲</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>占用</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>预约</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e83e8c;"></div>
+                    <span>VIP</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #6c757d;"></div>
+                    <span>维护</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>设备状态</h3>
+            <div class="status-item">
+                <span class="status-label">入口道闸</span>
+                <span class="status-value status-normal" id="entryGate">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">出口道闸</span>
+                <span class="status-value status-normal" id="exitGate">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">车牌识别</span>
+                <span class="status-value status-normal" id="plateRecognition">在线</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">收费系统</span>
+                <span class="status-value status-normal" id="paymentSystem">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">LED显示屏</span>
+                <span class="status-value status-normal" id="ledDisplay">正常</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">车位检测器</span>
+                <span class="status-value status-warning" id="sensors">147/150 在线</span>
+            </div>
+
+            <div class="revenue-chart">
+                <div class="chart-bar" style="height: 60%;">
+                    <div class="chart-label">周一</div>
+                </div>
+                <div class="chart-bar" style="height: 75%;">
+                    <div class="chart-label">周二</div>
+                </div>
+                <div class="chart-bar" style="height: 45%;">
+                    <div class="chart-label">周三</div>
+                </div>
+                <div class="chart-bar" style="height: 80%;">
+                    <div class="chart-label">周四</div>
+                </div>
+                <div class="chart-bar" style="height: 90%;">
+                    <div class="chart-label">周五</div>
+                </div>
+                <div class="chart-bar" style="height: 35%;">
+                    <div class="chart-label">周六</div>
+                </div>
+                <div class="chart-bar" style="height: 25%;">
+                    <div class="chart-label">周日</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>车辆进出记录</h3>
+            <div class="vehicle-log" id="vehicleLog">
+                <div class="log-entry">
+                    <div class="log-time">2024-06-11 14:35:22</div>
+                    <div class="log-message">京A12345 - 进入停车场 - A区15号</div>
+                </div>
+                <div class="log-entry exit">
+                    <div class="log-time">2024-06-11 14:28:15</div>
+                    <div class="log-message">沪B67890 - 离开停车场 - 停车费：¥15</div>
+                </div>
+                <div class="log-entry">
+                    <div class="log-time">2024-06-11 14:20:33</div>
+                    <div class="log-message">粤C11111 - 进入停车场 - B区08号</div>
+                </div>
+                <div class="log-entry violation">
+                    <div class="log-time">2024-06-11 14:15:45</div>
+                    <div class="log-message">未识别车牌 - 人工处理</div>
+                </div>
+                <div class="log-entry exit">
+                    <div class="log-time">2024-06-11 14:10:18</div>
+                    <div class="log-message">津D22222 - 离开停车场 - 停车费：¥8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>收费管理</h3>
+            <div class="status-item">
+                <span class="status-label">小时费率</span>
+                <span class="status-value" id="hourlyRate">¥5/小时</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">日最高费用</span>
+                <span class="status-value" id="dailyMax">¥50</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">月卡用户</span>
+                <span class="status-value status-normal" id="monthlyUsers">45 人</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">VIP用户</span>
+                <span class="status-value status-normal" id="vipUsers">12 人</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">今日收入</span>
+                <span class="status-value" id="todayIncome">¥2,340</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">本月收入</span>
+                <span class="status-value" id="monthlyIncome">¥68,520</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3>停车场控制</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="control-group">
+                <label for="gateControl">道闸控制</label>
+                <select class="control-input" id="gateControl">
+                    <option value="auto">自动模式</option>
+                    <option value="manual">手动模式</option>
+                    <option value="maintenance">维护模式</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="rateControl">费率设置</label>
+                <input type="number" class="control-input" id="rateControl" value="5" min="1" max="20">
+                <small style="color: #666;">元/小时</small>
+            </div>
+            <div class="control-group">
+                <label for="plateInput">手动车牌录入</label>
+                <input type="text" class="control-input" id="plateInput" placeholder="输入车牌号">
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="openGate()">开启道闸</button>
+                <button class="btn btn-warning" onclick="closeGate()">关闭道闸</button>
+                <button class="btn btn-success" onclick="addVehicle()">手动入场</button>
+                <button class="btn btn-danger" onclick="emergencyMode()">紧急模式</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 生成停车场地图
+        function generateParkingMap() {
+            const map = document.getElementById('parkingMap');
+            const totalSpots = 100; // 显示100个车位
+            
+            for (let i = 1; i <= totalSpots; i++) {
+                const spot = document.createElement('div');
+                spot.className = 'parking-spot';
+                spot.textContent = i.toString().padStart(2, '0');
+                spot.title = `车位 ${i}`;
+                
+                // 随机分配车位状态
+                const rand = Math.random();
+                if (rand < 0.58) { // 58% 占用率
+                    spot.classList.add('occupied');
+                } else if (rand < 0.65) { // 7% 预约
+                    spot.classList.add('reserved');
+                } else if (rand < 0.68) { // 3% VIP
+                    spot.classList.add('vip');
+                } else if (rand < 0.70) { // 2% 维护
+                    spot.classList.add('disabled');
+                }
+                
+                spot.addEventListener('click', () => showSpotInfo(i, spot));
+                map.appendChild(spot);
+            }
+        }
+
+        // 显示车位信息
+        function showSpotInfo(spotNumber, element) {
+            const status = element.classList.contains('occupied') ? '占用' :
+                          element.classList.contains('reserved') ? '预约' :
+                          element.classList.contains('vip') ? 'VIP' :
+                          element.classList.contains('disabled') ? '维护' : '空闲';
+            
+            alert(`车位 ${spotNumber}\n状态: ${status}`);
+        }
+
+        // 更新统计数据
+        function updateParkingStats() {
+            const spots = document.querySelectorAll('.parking-spot');
+            const occupied = document.querySelectorAll('.parking-spot.occupied').length;
+            const reserved = document.querySelectorAll('.parking-spot.reserved').length;
+            const total = 150; // 实际总车位数
+            const available = total - occupied - reserved;
+            const occupancyRate = Math.round((occupied / total) * 100);
+            
+            document.getElementById('occupiedSpots').textContent = occupied + reserved;
+            document.getElementById('availableSpots').textContent = available;
+            document.getElementById('occupancyRate').textContent = occupancyRate + '%';
+        }
+
+        // 模拟实时数据更新
+        function updateParkingData() {
+            // 随机更新收入
+            const revenue = Math.floor(2000 + Math.random() * 1000);
+            document.getElementById('dailyRevenue').textContent = '¥' + revenue.toLocaleString();
+            document.getElementById('todayIncome').textContent = '¥' + revenue.toLocaleString();
+            
+            // 随机添加车辆记录
+            if (Math.random() < 0.1) { // 10% 概率
+                addVehicleLog();
+            }
+            
+            // 随机更新车位状态
+            if (Math.random() < 0.05) { // 5% 概率
+                updateRandomSpot();
+            }
+        }
+
+        // 添加车辆记录
+        function addVehicleLog() {
+            const plates = ['京A12345', '沪B67890', '粤C11111', '津D22222', '川E33333'];
+            const actions = ['进入停车场', '离开停车场'];
+            const plate = plates[Math.floor(Math.random() * plates.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const now = new Date();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = action.includes('离开') ? 'log-entry exit' : 'log-entry';
+            
+            let message = `${plate} - ${action}`;
+            if (action.includes('进入')) {
+                const spot = String.fromCharCode(65 + Math.floor(Math.random() * 3)) + 
+                           '区' + (Math.floor(Math.random() * 50) + 1).toString().padStart(2, '0') + '号';
+                message += ` - ${spot}`;
+            } else {
+                const fee = Math.floor(Math.random() * 30) + 5;
+                message += ` - 停车费：¥${fee}`;
+            }
+            
+            logEntry.innerHTML = `
+                <div class="log-time">${now.toLocaleString('zh-CN')}</div>
+                <div class="log-message">${message}</div>
+            `;
+            
+            const logContainer = document.getElementById('vehicleLog');
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // 保持最多8条记录
+            while (logContainer.children.length > 8) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // 随机更新车位状态
+        function updateRandomSpot() {
+            const spots = document.querySelectorAll('.parking-spot:not(.vip):not(.disabled)');
+            const randomSpot = spots[Math.floor(Math.random() * spots.length)];
+            
+            if (randomSpot.classList.contains('occupied')) {
+                randomSpot.classList.remove('occupied');
+            } else if (!randomSpot.classList.contains('reserved')) {
+                randomSpot.classList.add('occupied');
+            }
+            
+            updateParkingStats();
+        }
+
+        // 道闸控制
+        function openGate() {
+            alert('道闸已开启');
+            addVehicleLog();
+        }
+
+        function closeGate() {
+            alert('道闸已关闭');
+        }
+
+        function addVehicle() {
+            const plate = document.getElementById('plateInput').value;
+            if (plate) {
+                alert(`车辆 ${plate} 已手动录入系统`);
+                document.getElementById('plateInput').value = '';
+                addVehicleLog();
+            } else {
+                alert('请输入车牌号');
+            }
+        }
+
+        function emergencyMode() {
+            alert('紧急模式已启动：所有道闸开启，停止收费');
+            
+            // 向主系统发送消息
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'subsystem-notification',
+                    system: 'Parking',
+                    message: '停车管理系统：紧急模式已启动'
+                }, '*');
+            }
+        }
+
+        // 初始化
+        generateParkingMap();
+        updateParkingStats();
+        setInterval(updateParkingData, 5000); // 每5秒更新数据
+    </script>
+</body>
+</html>
+
