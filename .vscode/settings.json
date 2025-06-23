@@ -1,5 +1,5 @@
 {
-    "python.defaultInterpreterPath": "./auth_service/venv/Scripts/python.exe",
+    "python.defaultInterpreterPath": "C:\\Users\\hwdem\\Downloads\\ibms_system_solution\\auth_service\\venv\\Scripts\\python.exe",
     "python.terminal.activateEnvironment": true,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
